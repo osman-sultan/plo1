@@ -1,3 +1,6 @@
 fastapi[standard]
 python-dotenv
 openai
+psycopg[binary]
+pgvector
+pandas
