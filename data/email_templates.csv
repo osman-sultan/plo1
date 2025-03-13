@@ -1,116 +1,14 @@
-﻿subject,body
-Tax Receipt Request,"Hello! And thanks for supporting the shop!
-
-A Ploopy representative will reach out to you soon with a commercial invoice that includes your order details, your name, and your address.
-
-Best,
-Ploopy Corporation"
-Tax Receipt Request (IF EUROPEAN),"Hello! And thanks for supporting the shop!
-
-A Ploopy representative will reach out to you soon with a commercial invoice that includes your order details, your name, and your address.
-
-Please note that, as a Canadian federal corporation, we do not collect VAT and do not have a VAT number, which is why that information has been omitted from this invoice.
-
-Best,
-Ploopy Corporation"
-Shipping Address Change (General),"Hello! And thanks for supporting the shop!
-
-We have changed your shipping address to the following:
-
-[ NEW ADDRESS ]
-
-Please let us know if that's correct!
-
-By the way, when you receive your shipping notification, it will have your previous shipping address on it, but we promise that your package will be routed to the address above.
-
-Best,
-Ploopy Corporation"
-Explain When Product will be shipped (NOT SHIPPED),"Hello! And thanks for supporting the shop!
-
-We have your order in our order log and we're hard at work putting your order together. You'll receive an email once it's on the way. If you selected tracked shipping, the email will contain your order’s tracking information.
-
-Best,
-Ploopy Corporation"
-Explain When Product will be shipped (SHIPPED),"Hello! And thanks for supporting the shop!
-
-Your order was shipped out, and you should have received an email confirmation, including all relevant information. Please let us know if you haven't received the email confirmation.
-
-Best,
-Ploopy Corporation"
-Discontinued Product Explanation (General),"Hello!
-
-Currently, we don't offer [PRODUCT NAME]. We used to, but we decided to stop providing those kits, because [SHORT DESCRIPTION WHY].
-
-Hope that explains things a bit better!
-
-Best,
-Ploopy Corporation
-"
-Refund Process (General),"Hello!
-
-Sorry to hear that it's not working out. A return is definitely possible.
-
-The process is simple. We provide you with a shipping label. You box up the parts and affix the label to the outside and drop it off at your local [USPS/Canada Post/etc.] office; you won't have to pay when you're there. Once we get the parts back in our shop, we will make sure everything is in good working order and then provide you with a full refund, less the cost of shipping it back to me $[SHIPPING COST].
-
-If that sounds good, we can get things started.
-
-Best,
-Ploopy Corporation"
-PMW Soldering Fault Explanation,"Hello! And thanks for supporting the shop!
-
-At Ploopy, we rigorously test every board that is sent out. Absolutely nothing that we ship is untested, so if we ship it, it has passed our testing standards, which are quite high as we use our products ourselves and want others to experience our products the way that we experience them.
-
-Many potential problems can occur during soldering, which can cause the sorts of issues that you're seeing now. One particularly common issue stems from the fact that the PMW-3360 has a plastic chip carrier that has a very low melting point. This means that it is quite sensitive to excessive heat, which can cause deformations in the chip carrier. These deformations can cause the chip to suddenly stop functioning, even after a period of successful usage.
-
-Another is improper connections, which can be caused by a number of defects during the soldering process. We always recommend this video to customers: https://www.youtube.com/watch?v=IpkkfK937mU It correctly shows how to avoid common issues like cold joints, excessive or not enough solder, and how and when to use flux. We watch it regularly to refresh our own skills, so it's a great watch even if you're already an expert.
-
-In these sorts of situations, we always recommend revisiting the soldering job. It can be surprising how simple soldering defects can hide behind joints that look perfectly acceptable.
-
-Alternatively, if the board is otherwise functional and just the sensor is non-functioning, we can look into providing you with a replacement after you've successfully desoldered the original chip. The chips themselves cost $24CAD, plus shipping to you. Also, you can find a great video on through-hole desoldering here: https://www.youtube.com/watch?v=Z38WsZFmq8E.
-
-Hopefully that provides you with some info on how we do things, soldering in general, and your options.
-
-Best,
-Ploopy Corporation"
-International Air (Untracked) Shipping Option Explanation (General),"Hello! And thanks for supporting the shop!
-
-When you made your order, you selected the shipping option of ""International Air (Untracked)"". This means that your shipping does not have any tracking information.
-
-Furthermore, we unfortunately don't have any kind of access to shipping information. If we did, we would gladly share it with you.
-
-That being said, while not common, packages occasionally get stuck during the shipping process. In my experience, the package almost always gets delivered, though it sometimes takes a bit longer than advertised.
-
-Best,
-Ploopy Corporation"
-Track Ball Colours Unavailability (General),"Hello!
-
-We receive our balls from a billiard ball supplier in large quantities. The makeup of them is split into mostly reds, but there are other colours in the mix as well. We typically sell down our stocks of the other colours first, leaving red (as the majority) left at the end. As we sell down our stocks, we adjust what's on our website to show what's available. Hopefully, that gives you a better idea of how things are run in the background.
-
-We're currently exploring options with other ball suppliers, but we don't have specific timelines for what colours will be available, and when. It's all a bit up in the air, we are sorry to say.
-
-Best,
-Ploopy Corporation"
-Shipping Delays Explanation (General),"Hello! And thanks for supporting the shop!
-
-While not common, packages occasionally get stuck during the shipping process. Despite that, the package almost always gets delivered, though it sometimes takes a bit longer than advertised.
-
-If it still hasn't been delivered two weeks from now, circle back and we'll see what we can do. And don't worry, no matter what happens, you'll be made whole. You paid for something, and you're going to get it.
-
-Best,
-Ploopy Corporation"
-Product Out of Stock Explanation (General),"Hello!
-
-Thank you for your interest in [Product Name]. We understand that it has been out of stock for some time now, and we appreciate your patience. Unfortunately, due to [brief explanation, e.g., the demands of our latest product release], scheduling a production run for [Product Name] has been particularly challenging.
-
-We are working hard to prioritize this and hope to have it back in stock in the near future, but at this time, we cannot make any guarantees. In the meantime, you can access the entire project open-source, free of charge, on GitHub: [Provide GitHub link].
-
-We sincerely apologize for any inconvenience and thank you for your understanding. If you have any questions or need further assistance, feel free to reach out to us at [Contact Information].
-
-Best,
-Ploopy Corporation"
-Missing Order Number Request (General),"Hello!
-
-Would you be able to provide us with your order number? Having that information would give us a lot of helpful context about your situation and allow us to help you better!
-
-Best,
-Ploopy Corporation"
+subject,body
+Tax Receipt Request,"Hello! And thanks for supporting the shop!\n\nA Ploopy representative will reach out to you soon with a commercial invoice that includes your order details, your name, and your address.\n\nBest,\nPloopy Corporation"
+Tax Receipt Request (IF EUROPEAN),"Hello! And thanks for supporting the shop!\n\nA Ploopy representative will reach out to you soon with a commercial invoice that includes your order details, your name, and your address.\n\nPlease note that, as a Canadian federal corporation, we do not collect VAT and do not have a VAT number, which is why that information has been omitted from this invoice.\n\nBest,\nPloopy Corporation"
+Shipping Address Change (General),"Hello! And thanks for supporting the shop!\n\nWe have changed your shipping address to the following:\n\n[ NEW ADDRESS ]\n\nPlease let us know if that's correct!\n\nBy the way, when you receive your shipping notification, it will have your previous shipping address on it, but we promise that your package will be routed to the address above.\n\nBest,\nPloopy Corporation"
+Explain When Product will be shipped (NOT SHIPPED),"Hello! And thanks for supporting the shop!\n\nWe have your order in our order log and we're hard at work putting your order together. You'll receive an email once it's on the way. If you selected tracked shipping, the email will contain your order’s tracking information.\n\nBest,\nPloopy Corporation"
+Explain When Product will be shipped (SHIPPED),"Hello! And thanks for supporting the shop!\n\nYour order was shipped out, and you should have received an email confirmation, including all relevant information. Please let us know if you haven't received the email confirmation.\n\nBest,\nPloopy Corporation"
+Discontinued Product Explanation (General),"Hello!\n\nCurrently, we don't offer [PRODUCT NAME]. We used to, but we decided to stop providing those kits, because [SHORT DESCRIPTION WHY].\n\nHope that explains things a bit better!\n\nBest,\nPloopy Corporation\n"
+Refund Process (General),"Hello!\n\nSorry to hear that it's not working out. A return is definitely possible.\n\nThe process is simple. We provide you with a shipping label. You box up the parts and affix the label to the outside and drop it off at your local [USPS/Canada Post/etc.] office; you won't have to pay when you're there. Once we get the parts back in our shop, we will make sure everything is in good working order and then provide you with a full refund, less the cost of shipping it back to me $[SHIPPING COST].\n\nIf that sounds good, we can get things started.\n\nBest,\nPloopy Corporation"
+PMW Soldering Fault Explanation,"Hello! And thanks for supporting the shop!\n\nAt Ploopy, we rigorously test every board that is sent out. Absolutely nothing that we ship is untested, so if we ship it, it has passed our testing standards, which are quite high as we use our products ourselves and want others to experience our products the way that we experience them.\n\nMany potential problems can occur during soldering, which can cause the sorts of issues that you're seeing now. One particularly common issue stems from the fact that the PMW-3360 has a plastic chip carrier that has a very low melting point. This means that it is quite sensitive to excessive heat, which can cause deformations in the chip carrier. These deformations can cause the chip to suddenly stop functioning, even after a period of successful usage.\n\nAnother is improper connections, which can be caused by a number of defects during the soldering process. We always recommend this video to customers: https://www.youtube.com/watch?v=IpkkfK937mU It correctly shows how to avoid common issues like cold joints, excessive or not enough solder, and how and when to use flux. We watch it regularly to refresh our own skills, so it's a great watch even if you're already an expert.\n\nIn these sorts of situations, we always recommend revisiting the soldering job. It can be surprising how simple soldering defects can hide behind joints that look perfectly acceptable.\n\nAlternatively, if the board is otherwise functional and just the sensor is non-functioning, we can look into providing you with a replacement after you've successfully desoldered the original chip. The chips themselves cost $24CAD, plus shipping to you. Also, you can find a great video on through-hole desoldering here: https://www.youtube.com/watch?v=Z38WsZFmq8E.\n\nHopefully that provides you with some info on how we do things, soldering in general, and your options.\n\nBest,\nPloopy Corporation"
+International Air (Untracked) Shipping Option Explanation (General),"Hello! And thanks for supporting the shop!\n\nWhen you made your order, you selected the shipping option of ""International Air (Untracked)"". This means that your shipping does not have any tracking information.\n\nFurthermore, we unfortunately don't have any kind of access to shipping information. If we did, we would gladly share it with you.\n\nThat being said, while not common, packages occasionally get stuck during the shipping process. In my experience, the package almost always gets delivered, though it sometimes takes a bit longer than advertised.\n\nBest,\nPloopy Corporation"
+Track Ball Colours Unavailability (General),"Hello!\n\nWe receive our balls from a billiard ball supplier in large quantities. The makeup of them is split into mostly reds, but there are other colours in the mix as well. We typically sell down our stocks of the other colours first, leaving red (as the majority) left at the end. As we sell down our stocks, we adjust what's on our website to show what's available. Hopefully, that gives you a better idea of how things are run in the background.\n\nWe're currently exploring options with other ball suppliers, but we don't have specific timelines for what colours will be available, and when. It's all a bit up in the air, we are sorry to say.\n\nBest,\nPloopy Corporation"
+Shipping Delays Explanation (General),"Hello! And thanks for supporting the shop!\n\nWhile not common, packages occasionally get stuck during the shipping process. Despite that, the package almost always gets delivered, though it sometimes takes a bit longer than advertised.\n\nIf it still hasn't been delivered two weeks from now, circle back and we'll see what we can do. And don't worry, no matter what happens, you'll be made whole. You paid for something, and you're going to get it.\n\nBest,\nPloopy Corporation"
+Product Out of Stock Explanation (General),"Hello!\n\nThank you for your interest in [Product Name]. We understand that it has been out of stock for some time now, and we appreciate your patience. Unfortunately, due to [brief explanation, e.g., the demands of our latest product release], scheduling a production run for [Product Name] has been particularly challenging.\n\nWe are working hard to prioritize this and hope to have it back in stock in the near future, but at this time, we cannot make any guarantees. In the meantime, you can access the entire project open-source, free of charge, on GitHub: [Provide GitHub link].\n\nWe sincerely apologize for any inconvenience and thank you for your understanding. If you have any questions or need further assistance, feel free to reach out to us at [Contact Information].\n\nBest,\nPloopy Corporation"
+Missing Order Number Request (General),"Hello!\n\nWould you be able to provide us with your order number? Having that information would give us a lot of helpful context about your situation and allow us to help you better!\n\nBest,\nPloopy Corporation"

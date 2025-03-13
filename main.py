@@ -41,11 +41,15 @@ register_vector(conn)  # Register the vector type with psycopg
 
 
 def reply_to_message(headers, message_id, reply_body):
-    # Fix the headers bug: use "headers=headers" in the httpx.post call.
+    """
+    Sends a reply to the specified message using the Graph API.
+    The reply_body is assumed to contain HTML-formatted content.
+    """
     endpoint = f"{MS_GRAPH_BASE_URL}/me/messages/{message_id}/reply"
-    data = {"comment": reply_body}
-    response = httpx.post(endpoint, headers=headers, json=data)
-    response.raise_for_status()
+    payload = {"message": {"body": {"contentType": "HTML", "content": reply_body}}}
+    response = httpx.post(
+        endpoint, headers={**headers, "Content-Type": "application/json"}, json=payload
+    )
     return response.status_code == 202
 
 
@@ -86,13 +90,20 @@ async def process_email(email: EmailData):
             return {"status": "No matching template found"}
         else:
             content, metadata, distance = result
-            reply_body = content  # Use the template content as the reply.
+
+            # Remove the subject from the template if it exists.
+            if content.strip().lower().startswith("subject:"):
+                idx = content.lower().find("body:")
+                if idx != -1:
+                    content = content[idx + len("body:") :].strip()
+
+            # Replace literal "\n" sequences with HTML <br> tags.
+            formatted_content = content.replace("\\n", "<br>")
+            reply_body = f"{formatted_content}<br><br>[THIS IS AN AUTOMATED MESSAGE]"
 
             # 3. Determine the message ID.
             message_id = email.message_id
             if not message_id:
-                # If the message_id isn't provided, try to locate the message using the subject.
-                # Note: This assumes that the subject uniquely identifies the message.
                 search_endpoint = f"{MS_GRAPH_BASE_URL}/me/messages"
                 params = {"$filter": f"subject eq '{email.subject}'", "$top": "1"}
                 search_response = httpx.get(
@@ -106,7 +117,7 @@ async def process_email(email: EmailData):
                     )
                 message_id = messages[0].get("id")
 
-            # 4. Send the reply using the reply function.
+            # 4. Send the reply using the reply_to_message function.
             success = reply_to_message(headers, message_id, reply_body)
             if success:
                 return {

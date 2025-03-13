@@ -61,7 +61,7 @@ def main():
         headers = {
             "Authorization": f"Bearer {access_token}",
         }
-        print(headers)
+        # print(headers)
     except Exception as e:
         print(f"Error: {e}")
 
