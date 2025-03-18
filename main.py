@@ -7,7 +7,9 @@ import psycopg
 from pgvector.psycopg import register_vector
 import httpx
 from typing import Optional
-from scripts.generate_token import get_access_token
+from scripts.token_manager import get_access_token, ensure_valid_token
+from scripts.outlook import is_parent_email, reply_to_message
+
 
 # Load environment variables from .env file.
 load_dotenv()
@@ -17,7 +19,7 @@ MS_GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0"
 # Instantiate the AzureOpenAI client.
 client = AzureOpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
-    api_version="2024-10-21",  # use the proper API version for your deployment
+    api_version="2024-10-21",
     azure_endpoint=os.environ.get("OPENAI_ENDPOINT"),
     azure_deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT"),
 )
@@ -25,36 +27,23 @@ client = AzureOpenAI(
 app = FastAPI()
 
 
-# Extend the EmailData model to include an optional message_id.
 class EmailData(BaseModel):
-    sender: str  # The "from" address.
-    recipient: str  # The "to" address.
+    sender: str
+    recipient: str
     subject: str
     body: str
-    message_id: Optional[str] = None  # Optional: provided by the caller if available.
+    message_id: Optional[str] = None
 
 
 # Setup a persistent connection to your Supabase/Postgres database.
 DB_CONNECTION = os.getenv("DB_CONNECTION")
 conn = psycopg.connect(DB_CONNECTION)
-register_vector(conn)  # Register the vector type with psycopg
-
-
-def reply_to_message(headers, message_id, reply_body):
-    """
-    Sends a reply to the specified message using the Graph API.
-    The reply_body is assumed to contain HTML-formatted content.
-    """
-    endpoint = f"{MS_GRAPH_BASE_URL}/me/messages/{message_id}/reply"
-    payload = {"message": {"body": {"contentType": "HTML", "content": reply_body}}}
-    response = httpx.post(
-        endpoint, headers={**headers, "Content-Type": "application/json"}, json=payload
-    )
-    return response.status_code == 202
+register_vector(conn)
 
 
 @app.post("/email")
 async def process_email(email: EmailData):
+
     access_token = get_access_token(
         os.environ.get("APPLICATION_ID"),
         os.environ.get("CLIENT_SECRET"),
@@ -68,9 +57,7 @@ async def process_email(email: EmailData):
     try:
         # 1. Create an embedding for the incoming email.
         embedding_response = client.embeddings.create(
-            model=os.environ.get(
-                "AZURE_OPENAI_DEPLOYMENT"
-            ),  # Use your deployment name here.
+            model=os.environ.get("AZURE_OPENAI_DEPLOYMENT"),
             input=combined_text,
         )
         incoming_embedding = embedding_response.data[0].embedding
@@ -104,6 +91,14 @@ async def process_email(email: EmailData):
             # 3. Determine the message ID.
             message_id = email.message_id
             if not message_id:
+                # Ensure we have a valid token before searching for messages
+                headers = ensure_valid_token(
+                    headers,
+                    os.environ.get("APPLICATION_ID"),
+                    os.environ.get("CLIENT_SECRET"),
+                    ["User.Read", "Mail.ReadWrite", "Mail.Send"],
+                )
+
                 search_endpoint = f"{MS_GRAPH_BASE_URL}/me/messages"
                 params = {"$filter": f"subject eq '{email.subject}'", "$top": "1"}
                 search_response = httpx.get(
@@ -115,9 +110,16 @@ async def process_email(email: EmailData):
                     raise HTTPException(
                         status_code=404, detail="Original message not found"
                     )
-                message_id = messages[0].get("id")
+                message_id = messages[0]["id"]
 
-            # 4. Send the reply using the reply_to_message function.
+            # 4. Check if this is a parent email (not a reply)
+            if not is_parent_email(headers, message_id):
+                return {
+                    "status": "Email is a reply, not sending automated response",
+                    "message_id": message_id,
+                }
+
+            # 5. Send the reply using the reply_to_message function.
             success = reply_to_message(headers, message_id, reply_body)
             if success:
                 return {
