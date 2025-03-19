@@ -34,11 +34,32 @@ class EmailData(BaseModel):
     body: str
     message_id: Optional[str] = None
 
+class SystemOutput(BaseModel):
+    sender: str
+    subject: str
+    body: str
+    email_embedding: list[float]
+    template_metadata: str
+    distance: float
+
 
 # Setup a persistent connection to your Supabase/Postgres database.
 DB_CONNECTION = os.getenv("DB_CONNECTION")
 conn = psycopg.connect(DB_CONNECTION)
 register_vector(conn)
+
+def log_results(conn, output_data):
+    try:
+        with conn.cursor() as cursor:
+            query = """
+                INSERT INTO outputs (sender, subject, body, email_embedding, template_metadata, distance)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (output_data.sender, output_data.subject, output_data.body, output_data.email_embedding, 
+                                   output_data.template_metadata, output_data.distance))
+            print("Successfully logged output info to database")
+    except Exception as e:
+        print("Error logging info:", str(e))
 
 
 @app.post("/email")
@@ -121,6 +142,13 @@ async def process_email(email: EmailData):
 
             # 5. Send the reply using the reply_to_message function.
             success = reply_to_message(headers, message_id, reply_body)
+
+            # 6. Log system output to supabase.
+            output_data = SystemOutput(sender = email.sender, subject = email.subject, body = email.body,
+                                       email_embedding = incoming_embedding, template_metadata = metadata,
+                                       distance = distance)
+            log_results(conn, output_data)
+
             if success:
                 return {
                     "status": "Email processed and reply sent successfully",
