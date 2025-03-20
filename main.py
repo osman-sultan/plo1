@@ -7,14 +7,14 @@ import psycopg
 from pgvector.psycopg import register_vector
 import httpx
 from typing import Optional
-from scripts.token_manager import get_access_token, ensure_valid_token
-from scripts.outlook import is_parent_email, reply_to_message
-
+from scripts.token_manager import get_access_token
+from scripts.outlook import reply_to_message
 
 # Load environment variables from .env file.
 load_dotenv()
 
 MS_GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0"
+app = FastAPI()
 
 # Instantiate the AzureOpenAI client.
 client = AzureOpenAI(
@@ -23,8 +23,6 @@ client = AzureOpenAI(
     azure_endpoint=os.environ.get("OPENAI_ENDPOINT"),
     azure_deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT"),
 )
-
-app = FastAPI()
 
 
 class EmailData(BaseModel):
@@ -64,12 +62,15 @@ def log_results(conn, output_data):
 
 @app.post("/email")
 async def process_email(email: EmailData):
-
+    print("Received email:", email)
+    # Use application permissions (client credentials flow)
     access_token = get_access_token(
         os.environ.get("APPLICATION_ID"),
         os.environ.get("CLIENT_SECRET"),
-        ["User.Read", "Mail.ReadWrite", "Mail.Send"],
+        ["https://graph.microsoft.com/.default"],
+        os.environ.get("TENANT_ID"),
     )
+    print("Access token:", access_token)
     headers = {"Authorization": f"Bearer {access_token}"}
 
     # Combine subject and body for embedding.
@@ -98,29 +99,23 @@ async def process_email(email: EmailData):
             return {"status": "No matching template found"}
         else:
             content, metadata, distance = result
-
-            # Remove the subject from the template if it exists.
             if content.strip().lower().startswith("subject:"):
                 idx = content.lower().find("body:")
                 if idx != -1:
                     content = content[idx + len("body:") :].strip()
-
-            # Replace literal "\n" sequences with HTML <br> tags.
             formatted_content = content.replace("\\n", "<br>")
             reply_body = f"{formatted_content}<br><br>[THIS IS AN AUTOMATED MESSAGE]"
 
             # 3. Determine the message ID.
+            # In application permission flows, there is no "me" so use a designated mailbox.
+            mailbox = os.environ.get("MAILBOX")
+            if not mailbox:
+                raise HTTPException(
+                    status_code=500, detail="MAILBOX environment variable is missing"
+                )
             message_id = email.message_id
             if not message_id:
-                # Ensure we have a valid token before searching for messages
-                headers = ensure_valid_token(
-                    headers,
-                    os.environ.get("APPLICATION_ID"),
-                    os.environ.get("CLIENT_SECRET"),
-                    ["User.Read", "Mail.ReadWrite", "Mail.Send"],
-                )
-
-                search_endpoint = f"{MS_GRAPH_BASE_URL}/me/messages"
+                search_endpoint = f"{MS_GRAPH_BASE_URL}/users/{mailbox}/messages"
                 params = {"$filter": f"subject eq '{email.subject}'", "$top": "1"}
                 search_response = httpx.get(
                     search_endpoint, headers=headers, params=params
@@ -133,22 +128,15 @@ async def process_email(email: EmailData):
                     )
                 message_id = messages[0]["id"]
 
-            # 4. Check if this is a parent email (not a reply)
-            if not is_parent_email(headers, message_id):
-                return {
-                    "status": "Email is a reply, not sending automated response",
-                    "message_id": message_id,
-                }
+            # 4. Send the reply.
+            success = reply_to_message(headers, mailbox, message_id, reply_body)
 
-            # 5. Send the reply using the reply_to_message function.
-            success = reply_to_message(headers, message_id, reply_body)
-
-            # 6. Log system output to supabase.
+            # 5. Log outputs to Supabase
             output_data = SystemOutput(sender = email.sender, subject = email.subject, body = email.body,
-                                       email_embedding = incoming_embedding, template_metadata = metadata,
-                                       distance = distance)
+                                        email_embedding = incoming_embedding, template_metadata = metadata,
+                                        distance = distance)
             log_results(conn, output_data)
-
+            
             if success:
                 return {
                     "status": "Email processed and reply sent successfully",
