@@ -21,7 +21,6 @@ client = AzureOpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
     api_version="2024-10-21",
     azure_endpoint=os.environ.get("OPENAI_ENDPOINT"),
-    azure_deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT"),
 )
 
 
@@ -33,23 +32,21 @@ class EmailData(BaseModel):
     message_id: Optional[str] = None
 
 
-# Setup a persistent connection to your Supabase/Postgres database.
-DB_CONNECTION = os.getenv("DB_CONNECTION")
-conn = psycopg.connect(DB_CONNECTION)
-register_vector(conn)
-
-
 @app.post("/email")
 async def process_email(email: EmailData):
-    print("Received email:", email)
+
+    DB_CONNECTION = os.getenv("DB_CONNECTION")
+    conn = psycopg.connect(DB_CONNECTION)
+    register_vector(conn)
+
+    print("Received email")
     # Use application permissions (client credentials flow)
     access_token = get_access_token(
         os.environ.get("APPLICATION_ID"),
         os.environ.get("CLIENT_SECRET"),
-        ["https://graph.microsoft.com/.default"],
-        os.environ.get("TENANT_ID"),
+        ["User.Read", "Mail.ReadWrite", "Mail.Send"],
     )
-    print("Access token:", access_token)
+    print("Access token obtained")
     headers = {"Authorization": f"Bearer {access_token}"}
 
     # Combine subject and body for embedding.
@@ -58,10 +55,13 @@ async def process_email(email: EmailData):
     try:
         # 1. Create an embedding for the incoming email.
         embedding_response = client.embeddings.create(
-            model=os.environ.get("AZURE_OPENAI_DEPLOYMENT"),
+            model=os.environ.get(
+                "AZURE_OPENAI_DEPLOYMENT"
+            ),  # Use your deployment name here.
             input=combined_text,
         )
         incoming_embedding = embedding_response.data[0].embedding
+        print("Embedding created")
 
         # 2. Perform similarity search in the email_templates table.
         with conn.cursor() as cursor:
@@ -73,28 +73,27 @@ async def process_email(email: EmailData):
             """
             cursor.execute(query, (incoming_embedding, incoming_embedding))
             result = cursor.fetchone()
+            print("Similarity search performed")
 
         if result is None:
             return {"status": "No matching template found"}
         else:
             content, metadata, distance = result
+
+            # Remove the subject from the template if it exists.
             if content.strip().lower().startswith("subject:"):
                 idx = content.lower().find("body:")
                 if idx != -1:
                     content = content[idx + len("body:") :].strip()
+
+            # Replace literal "\n" sequences with HTML <br> tags.
             formatted_content = content.replace("\\n", "<br>")
             reply_body = f"{formatted_content}<br><br>[THIS IS AN AUTOMATED MESSAGE]"
 
             # 3. Determine the message ID.
-            # In application permission flows, there is no "me" so use a designated mailbox.
-            mailbox = os.environ.get("MAILBOX")
-            if not mailbox:
-                raise HTTPException(
-                    status_code=500, detail="MAILBOX environment variable is missing"
-                )
             message_id = email.message_id
             if not message_id:
-                search_endpoint = f"{MS_GRAPH_BASE_URL}/users/{mailbox}/messages"
+                search_endpoint = f"{MS_GRAPH_BASE_URL}/me/messages"
                 params = {"$filter": f"subject eq '{email.subject}'", "$top": "1"}
                 search_response = httpx.get(
                     search_endpoint, headers=headers, params=params
@@ -105,10 +104,10 @@ async def process_email(email: EmailData):
                     raise HTTPException(
                         status_code=404, detail="Original message not found"
                     )
-                message_id = messages[0]["id"]
+                message_id = messages[0].get("id")
 
-            # 4. Send the reply.
-            success = reply_to_message(headers, mailbox, message_id, reply_body)
+            # 4. Send the reply using the reply_to_message function.
+            success = reply_to_message(headers, message_id, reply_body)
             if success:
                 return {
                     "status": "Email processed and reply sent successfully",
