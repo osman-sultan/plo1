@@ -6,9 +6,15 @@ from openai import AzureOpenAI
 import psycopg
 from pgvector.psycopg import register_vector
 import httpx
+import json
 from typing import Optional
 from scripts.token_manager import get_access_token
-from scripts.outlook import reply_to_message
+from scripts.outlook import (
+    reply_to_message,
+    is_reply_email,
+    send_notification_email,
+    move_notification_emails,
+)
 
 # Load environment variables from .env file.
 load_dotenv()
@@ -35,6 +41,12 @@ class EmailData(BaseModel):
 @app.post("/email")
 async def process_email(email: EmailData):
 
+    if email.sender.lower() == "osman_sultan1128@outlook.com":
+        print(
+            "Notification email detected from self. Skipping processing to prevent infinite loop."
+        )
+        return {"status": "Notification email ignored"}
+
     DB_CONNECTION = os.getenv("DB_CONNECTION")
     conn = psycopg.connect(DB_CONNECTION)
     register_vector(conn)
@@ -48,6 +60,14 @@ async def process_email(email: EmailData):
     )
     print("Access token obtained")
     headers = {"Authorization": f"Bearer {access_token}"}
+
+    # Fetch message data if needed (but don't use it to skip processing)
+    message_data = None
+    if email.message_id:
+        message_endpoint = f"{MS_GRAPH_BASE_URL}/me/messages/{email.message_id}"
+        message_response = httpx.get(message_endpoint, headers=headers)
+        if message_response.status_code == 200:
+            message_data = message_response.json()
 
     # Combine subject and body for embedding.
     combined_text = f"{email.subject}\n{email.body}"
@@ -78,16 +98,16 @@ async def process_email(email: EmailData):
         if result is None:
             return {"status": "No matching template found"}
         else:
-            content, metadata, distance = result
+            content, metadata_json, distance = result
 
-            # Remove the subject from the template if it exists.
-            if content.strip().lower().startswith("subject:"):
-                idx = content.lower().find("body:")
-                if idx != -1:
-                    content = content[idx + len("body:") :].strip()
+            # Parse metadata JSON (assuming it’s already a dict)
+            metadata = metadata_json
+            priority = metadata.get("priority", "no action")
 
-            # Replace literal "\n" sequences with HTML <br> tags.
-            reply_body = content.replace("\\n", "<br>")
+            print(f"Template found with priority: {priority}")
+
+            # Use the body from metadata (instead of content) and replace literal "/n" sequences with HTML <br> tags.
+            reply_body = metadata.get("body", "").replace("/n", "<br>")
 
             # 3. Determine the message ID.
             message_id = email.message_id
@@ -107,15 +127,42 @@ async def process_email(email: EmailData):
 
             # 4. Send the reply using the reply_to_message function.
             success = reply_to_message(headers, message_id, reply_body)
+
+            # 5. Send notification based on priority only if reply was successful
+            notification_result = None
             if success:
+                notification_result = send_notification_email(email, priority)
                 return {
                     "status": "Email processed and reply sent successfully",
                     "template": content,
-                    "metadata": metadata,
+                    "priority": priority,
                     "distance": distance,
                 }
             else:
                 raise HTTPException(status_code=500, detail="Failed to send reply")
     except Exception as e:
         print("Error processing email:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/move-notification-emails")
+async def move_notifications():
+    """
+    Endpoint to find notification emails in inbox and move them to appropriate folders.
+    """
+    try:
+        # Get access token for Microsoft Graph API
+        access_token = get_access_token(
+            os.environ.get("APPLICATION_ID"),
+            os.environ.get("CLIENT_SECRET"),
+            ["Mail.ReadWrite"],
+        )
+
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        # Move notification emails to appropriate folders
+        results = move_notification_emails(headers)
+
+        return results
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
