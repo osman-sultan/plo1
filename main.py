@@ -47,6 +47,18 @@ async def process_email(email: EmailData):
         )
         return {"status": "Notification email ignored"}
 
+    # Fetch message data if message_id is available
+    message_data = None
+    if email.message_id:
+        message_endpoint = f"{MS_GRAPH_BASE_URL}/me/messages/{email.message_id}"
+        message_response = httpx.get(message_endpoint, headers=headers)
+        if message_response.status_code == 200:
+            message_data = message_response.json()
+
+    # Check if the email is a reply
+    if is_reply_email(email.subject, message_data):
+        return {"status": "Skipped processing", "reason": "Email is a reply"}
+
     DB_CONNECTION = os.getenv("DB_CONNECTION")
     conn = psycopg.connect(DB_CONNECTION)
     register_vector(conn)
@@ -60,14 +72,6 @@ async def process_email(email: EmailData):
     )
     print("Access token obtained")
     headers = {"Authorization": f"Bearer {access_token}"}
-
-    # Fetch message data if needed (but don't use it to skip processing)
-    message_data = None
-    if email.message_id:
-        message_endpoint = f"{MS_GRAPH_BASE_URL}/me/messages/{email.message_id}"
-        message_response = httpx.get(message_endpoint, headers=headers)
-        if message_response.status_code == 200:
-            message_data = message_response.json()
 
     # Combine subject and body for embedding.
     combined_text = f"{email.subject}\n{email.body}"
@@ -135,6 +139,7 @@ async def process_email(email: EmailData):
                 return {
                     "status": "Email processed and reply sent successfully",
                     "template": content,
+                    "notification": notification_result,
                     "priority": priority,
                     "distance": distance,
                 }

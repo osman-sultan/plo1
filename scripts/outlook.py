@@ -137,27 +137,11 @@ def send_notification_email(customer_email, priority):
 
 
 def is_reply_email(subject, message_data=None):
-    """
-    Check if an email is a reply based on subject and message data.
-
-    Args:
-        subject: Email subject line
-        message_data: Additional message data from Graph API if available
-
-    Returns:
-        bool: True if the email is a reply, False otherwise
-    """
-    # Check subject line for common reply prefixes
     if re.match(r"^(re:|fw:|fwd:)", subject.lower().strip()):
         return True
-
-    # If we have message data from Graph API, check conversation properties
     if message_data and message_data.get("conversationIndex"):
-        # If conversationIndex length > 22 chars, it's likely a reply
-        # (first message in thread has shorter index)
         if len(message_data.get("conversationIndex", "")) > 22:
             return True
-
     return False
 
 
