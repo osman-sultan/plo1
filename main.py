@@ -63,11 +63,11 @@ async def process_email(email: EmailData):
         incoming_embedding = embedding_response.data[0].embedding
         print("Embedding created")
 
-        # 2. Perform similarity search in the email_templates table.
+        # 2. Perform similarity search in the templates table.
         with conn.cursor() as cursor:
             query = """
                 SELECT content, metadata, (embedding <=> %s::vector) AS distance
-                FROM email_templates
+                FROM templates
                 ORDER BY embedding <=> %s::vector
                 LIMIT 1;
             """
@@ -87,8 +87,7 @@ async def process_email(email: EmailData):
                     content = content[idx + len("body:") :].strip()
 
             # Replace literal "\n" sequences with HTML <br> tags.
-            formatted_content = content.replace("\\n", "<br>")
-            reply_body = f"{formatted_content}<br><br>[THIS IS AN AUTOMATED MESSAGE]"
+            reply_body = content.replace("\\n", "<br>")
 
             # 3. Determine the message ID.
             message_id = email.message_id
