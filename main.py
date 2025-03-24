@@ -41,11 +41,22 @@ class EmailData(BaseModel):
 @app.post("/email")
 async def process_email(email: EmailData):
 
+    print("Received email")
+
     if email.sender.lower() == "osman_sultan1128@outlook.com":
         print(
             "Notification email detected from self. Skipping processing to prevent infinite loop."
         )
         return {"status": "Notification email ignored"}
+
+    # Use application permissions (client credentials flow)
+    access_token = get_access_token(
+        os.environ.get("APPLICATION_ID"),
+        os.environ.get("CLIENT_SECRET"),
+        ["User.Read", "Mail.ReadWrite", "Mail.Send"],
+    )
+    print("Access token obtained")
+    headers = {"Authorization": f"Bearer {access_token}"}
 
     # Fetch message data if message_id is available
     message_data = None
@@ -62,16 +73,6 @@ async def process_email(email: EmailData):
     DB_CONNECTION = os.getenv("DB_CONNECTION")
     conn = psycopg.connect(DB_CONNECTION)
     register_vector(conn)
-
-    print("Received email")
-    # Use application permissions (client credentials flow)
-    access_token = get_access_token(
-        os.environ.get("APPLICATION_ID"),
-        os.environ.get("CLIENT_SECRET"),
-        ["User.Read", "Mail.ReadWrite", "Mail.Send"],
-    )
-    print("Access token obtained")
-    headers = {"Authorization": f"Bearer {access_token}"}
 
     # Combine subject and body for embedding.
     combined_text = f"{email.subject}\n{email.body}"
