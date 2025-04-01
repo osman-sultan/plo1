@@ -27,8 +27,7 @@ with conn.cursor() as cursor:
     cursor.execute("CREATE EXTENSION IF NOT EXISTS vector")
     conn.commit()
 
-# Load the CSV file containing email templates (subject and body)
-# Update the file path if needed; here, we're using the attached file "PLO1 Templates.csv"
+# Load the CSV file containing email templates (subject, body, and priority)
 csv_file = "data/email_templates.csv"
 df = pd.read_csv(csv_file)
 
@@ -38,7 +37,7 @@ df.columns = df.columns.str.strip().str.lower()
 # Prepare and insert embeddings for each email template.
 with conn.cursor() as cursor:
     for _, row in df.iterrows():
-        # Update the keys if your CSV uses different names than 'subject' and 'body'
+        # Create the combined text from subject and body.
         text = f"Subject: {row['subject']}. Body: {row['body']}."
 
         # Generate embedding using the Azure OpenAI client.
@@ -54,13 +53,13 @@ with conn.cursor() as cursor:
         metadata = row.to_dict()
         metadata = {k: (None if pd.isna(v) else v) for k, v in metadata.items()}
 
-        # Insert the email text, its embedding, and metadata into the "email_templates" table.
+        # Insert the email template into the "email_templates" table.
         cursor.execute(
             """
-            INSERT INTO email_templates (content, embedding, metadata)
-            VALUES (%s, %s, %s)
+            INSERT INTO templates (content, embedding, metadata, priority)
+            VALUES (%s, %s, %s, %s)
             """,
-            (text, embedding, json.dumps(metadata)),
+            (text, embedding, json.dumps(metadata), row["priority"]),
         )
     conn.commit()
 
