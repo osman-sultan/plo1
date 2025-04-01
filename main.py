@@ -47,11 +47,6 @@ class SystemOutput(BaseModel):
     notification_result: dict
 
 
-# Setup a persistent connection to your Supabase/Postgres database.
-DB_CONNECTION = os.getenv("DB_CONNECTION")
-conn = psycopg.connect(DB_CONNECTION)
-register_vector(conn)
-
 def log_results(conn, output_data):
     try:
         with conn.cursor() as cursor:
