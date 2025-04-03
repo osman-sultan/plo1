@@ -7,7 +7,7 @@ load_dotenv()
 
 
 def test_graph_connection():
-    # Get token
+    # Get token using application permissions
     access_token = get_access_token(
         os.environ.get("APPLICATION_ID"),
         os.environ.get("CLIENT_SECRET"),

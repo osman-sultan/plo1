@@ -36,6 +36,13 @@ cd plo1
    source venv/bin/activate
    ```
 
+   **bash:**
+
+   ```
+   python -m venv venv
+   source venv/Scripts/activate
+   ```
+
    You should see `(venv)` at the beginning of your terminal prompt, indicating the virtual environment is active.
 
 3. Install the required packages:
